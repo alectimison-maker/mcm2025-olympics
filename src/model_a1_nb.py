@@ -79,13 +79,18 @@ def bootstrap_prediction_interval(model_func, train_df, pred_df, target="Total",
     rng = np.random.default_rng(seed)
     mus = []
     for b in range(B):
+        if (b == 0) or ((b + 1) % 10 == 0):
+            print(f"[{target}] bootstrap {b+1}/{B} (success={len(mus)})", flush=True)
+
         idx = rng.integers(0, len(train_df), len(train_df))
         boot = train_df.iloc[idx].copy()
         try:
             m = model_func(boot, target=target)
             mu = predict_mean(m, pred_df)
             mus.append(mu)
-        except Exception:
+        except Exception as e:
+            # 可选：想看失败原因就打开下一行
+            # print(f"[{target}] bootstrap {b+1} failed: {e}", flush=True)
             continue
     if len(mus) == 0:
         raise RuntimeError("Bootstrap failed: no successful fits.")
